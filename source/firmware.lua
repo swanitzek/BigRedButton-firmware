@@ -1,6 +1,13 @@
 local Utils = require("utils")
 
 local gpioIndex = 3 -- Input pin (detects the press of the button)
+local gpioIndex_Led = 4
+
+local ledStatus = false
+local ledBlinking = true
+
+local Wifi_Connected = 5
+
 local counter = 0 -- counts how often the button was pressed (for debug purposes)
 
 require("config")
@@ -33,7 +40,7 @@ function sendRequest(number)
 
 	conn:on("connection", function(conn,payload)
 	     print("sending...")
-	     conn:send("GET " .. config.SERVER_URL .. "/setGcmId/?id=" .. number .. " HTTP/1.0\r\n") 
+	     conn:send("GET " .. config.SERVER_URL .. "/ring/ HTTP/1.0\r\n") 
 	     conn:send("Host: " .. config.SERVER_HOSTNAME .. "\r\n") 
 	     conn:send("Accept: */*\r\n") 
 	     conn:send("User-Agent: Mozilla/4.0 (compatible; ESP8266;)\r\n") 
@@ -41,7 +48,34 @@ function sendRequest(number)
 	end)
 end
 
+function setStatusLed(value)
+	if (value) then
+		gpio.write(gpioIndex_Led, gpio.HIGH)
+	else 
+		gpio.write(gpioIndex_Led, gpio.LOW)
+	end
+end
+
+tmr.alarm(0, 100, 1, 
+	function() 
+		if ledBlinking then
+			ledStatus = not ledStatus
+			setStatusLed(ledStatus)
+		end
+
+		if wifi.sta.status() == Wifi_Connected then -- stop blinking if Wifi is successfully connected
+			ledBlinking = false
+			setStatusLed(true)
+		else
+			ledBlinking = true
+		end
+    end 
+    )
+
 gpio.mode(gpioIndex, gpio.INT)
 gpio.trig(gpioIndex, "up", Utils.debounce(buttonPressed))
+
+gpio.mode(gpioIndex_Led, gpio.OUTPUT)
+gpio.write(gpioIndex_Led, gpio.LOW)
 
 print "Running."
