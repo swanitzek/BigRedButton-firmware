@@ -6,11 +6,14 @@ local gpioIndex_Led = 4
 local ledStatus = false
 local ledBlinking = true
 
-local Wifi_Connected = 5
+local Wifi_Connected = 5 -- Constant for "WIFI_GOT_IP" (the state that is reached when the chip is finally connected to a WiFi network)
 
 local counter = 0 -- counts how often the button was pressed (for debug purposes)
 
 require("config")
+
+local json = "{" .. Utils.quotestr("secret") .. ": " .. Utils.quotestr(config.SECRET) .. "}"
+
 
 -- callback function (handles interrupt)
 function buttonPressed(level)
@@ -21,7 +24,7 @@ function buttonPressed(level)
 	sendRequest(counter)
 end
 
--- create a conenction to the webserver and call the /setGcmId action for testing purposes 
+-- create a connection to the webserver and call the /setGcmId action for testing purposes 
 function sendRequest(number)
 	conn=net.createConnection(net.TCP, false) 
 
@@ -40,11 +43,18 @@ function sendRequest(number)
 
 	conn:on("connection", function(conn,payload)
 	     print("sending...")
-	     conn:send("GET " .. config.SERVER_URL .. "/ring/ HTTP/1.0\r\n") 
+
+	     conn:send("POST " .. config.SERVER_URL .. "/ring/ HTTP/1.0\r\n") 
 	     conn:send("Host: " .. config.SERVER_HOSTNAME .. "\r\n") 
 	     conn:send("Accept: */*\r\n") 
-	     conn:send("User-Agent: Mozilla/4.0 (compatible; ESP8266;)\r\n") 
-	     conn:send("\r\n") 
+	     conn:send("User-Agent: Mozilla/4.0 (compatible; ESP8266;)\r\n")
+	     conn:send("Content-Length: " .. string.len(json) .. "\r\n")
+	     conn:send("Content-Type: application/json\r\n")
+	     conn:send("\r\n")
+
+	     print(json)
+
+	     conn:send(json) -- JSON
 	end)
 end
 

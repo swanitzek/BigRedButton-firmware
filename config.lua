@@ -5,3 +5,4 @@ SERVER_HOSTNAME = "example.com" -- hostname of the server which is running our n
 
 SERVER_PORT = 80 -- server port (port 80 should work well in most cases)
 SERVER_URL = "/bigredbutton" -- The path to the node-server. Don't include a trailing backslash.
+SECRET = "Some secret phrase you should change!" -- This secret must be the same as in the BigRedButton-server repository
