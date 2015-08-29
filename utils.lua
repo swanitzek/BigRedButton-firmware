@@ -15,6 +15,11 @@ local function debounce (func)
     end
 end
 
+local function quotestr(str)
+    return '"'..str..'"'
+end
+
 M.debounce = debounce
- 
+M.quotestr = quotestr
+
 return M
